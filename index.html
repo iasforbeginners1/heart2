@@ -3,119 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heart Anatomy Challenge</title>
+    <title>Heart Anatomy Quiz - Fixed</title>
     <style>
-        :root { --red: #d63031; --bg: #f8f9fa; --hide-color: #f7d2d2; } /* Image ka background color match kiya hai */
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; }
+        :root { --red: #e74c3c; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; }
         
-        #ui-header { text-align: center; margin-bottom: 20px; }
-        .label-bank { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; max-width: 900px; padding: 20px; background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        #ui-header { text-align: center; padding: 10px; }
+        .label-bank { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 900px; padding: 15px; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 10px; }
         
-        .draggable { padding: 10px 15px; background: white; border: 2px solid #ee5253; color: #d63031; border-radius: 8px; cursor: grab; font-weight: bold; font-size: 14px; transition: 0.2s; }
-        .draggable:hover { background: #ee5253; color: white; }
+        .draggable { padding: 8px 12px; background: white; border: 2px solid var(--red); color: var(--red); border-radius: 6px; cursor: grab; font-weight: bold; font-size: 13px; transition: 0.2s; user-select: none; }
+        .draggable:active { transform: scale(0.95); }
+        .selected { background: #ffeaa7 !important; border-color: #f1c40f !important; color: #000; }
 
-        /* Game Board container */
-        #viewport { position: relative; width: 1000px; height: 750px; background-image: url('image_a0b1bf.png'); background-size: cover; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); overflow: hidden; }
+        /* Game Board Area */
+        #game-container { position: relative; width: 100%; max-width: 800px; aspect-ratio: 800 / 600; background-color: white; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
+        
+        /* The Image itself */
+        #heart-image { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; }
 
-        /* Patch style to hide original text */
-        .patch { position: absolute; background: #fce4e4; /* Light pink to match image bg */ border: 2px dashed #ff7675; display: flex; align-items: center; justify-content: center; transition: 0.3s; z-index: 5; font-size: 13px; color: transparent; cursor: pointer; border-radius: 5px; }
-        .patch.correct { background: #55efc4; border: 2px solid #00b894; color: #006266; font-weight: bold; }
+        /* Patches to hide labels and act as drop zones */
+        .patch { position: absolute; background: #fbe5e5; border: 2px dashed #ff9a9e; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; cursor: pointer; color: transparent; z-index: 10; text-align: center; }
+        .patch:hover { border-color: var(--red); color: #888; }
+        .patch.correct { background: #55efc4 !important; border: 2px solid #00b894 !important; color: #006266 !important; font-size: 12px; }
 
-        /* Coordinates to hide existing text on image_a0b1bf.png */
-        .p1 { top: 380px; left: 100px; width: 200px; height: 60px; } /* Right Atrium */
-        .p2 { top: 200px; left: 80px; width: 230px; height: 80px; }  /* Right Brachiocephalic */
-        .p3 { top: 615px; left: 180px; width: 200px; height: 50px; } /* Left Atrium (Bottom) */
-        .p4 { top: 235px; left: 740px; width: 180px; height: 40px; } /* Pulmonary Truck */
-        .p5 { top: 345px; left: 740px; width: 180px; height: 40px; } /* Left Atrium */
-        .p6 { top: 485px; left: 740px; width: 180px; height: 40px; } /* Left Ventricle */
-        .p7 { top: 585px; left: 740px; width: 180px; height: 40px; } /* Top of heart */
+        /* Coordinates (Approximate for image_a0b1bf.png) */
+        .p1 { top: 16%; left: 10%; width: 25%; height: 8%; }  /* Brachiocephalic vein */
+        .p2 { top: 31%; left: 10%; width: 20%; height: 6%; }  /* Right Atrium */
+        .p3 { top: 53%; left: 18%; width: 20%; height: 6%; }  /* Left Atrium (pointing lower) */
+        .p4 { top: 15%; left: 63%; width: 22%; height: 6%; }  /* Pulmonary Trunk */
+        .p5 { top: 26%; left: 63%; width: 20%; height: 6%; }  /* Left Atrium */
+        .p6 { top: 37%; left: 63%; width: 20%; height: 6%; }  /* Left Ventricle */
+        .p7 { top: 45%; left: 63%; width: 22%; height: 6%; }  /* Top of the Heart */
 
-        #msg { margin-top: 20px; font-size: 20px; font-weight: bold; min-height: 30px; }
+        #msg { margin-top: 15px; font-weight: bold; font-size: 18px; min-height: 25px; }
     </style>
 </head>
 <body>
 
     <div id="ui-header">
-        <h1>Human Heart Quiz</h1>
-        <p>Naam uthaiye aur sahi "Box" par rakhiye jo original text ko chhupa raha hai.</p>
+        <h2 style="color: #c0392b;">Heart Labeling Master</h2>
+        <p style="font-size: 14px; color: #666;">Step 1: Naam click karein | Step 2: Sahi box par click karein</p>
     </div>
 
     <div class="label-bank" id="bank">
-        <div class="draggable" draggable="true" id="l2">The right brachiocephalic vein</div>
-        <div class="draggable" draggable="true" id="l1">Right Atrium</div>
-        <div class="draggable" draggable="true" id="l3">Left Atrium (Bottom)</div>
-        <div class="draggable" draggable="true" id="l4">Pulmonary Truck</div>
-        <div class="draggable" draggable="true" id="l5">Left Atrium</div>
-        <div class="draggable" draggable="true" id="l6">Left Ventricle</div>
-        <div class="draggable" draggable="true" id="l7">Top of the Heart</div>
+        <div class="draggable" onclick="select(this, 'l1')">The right brachiocephalic vein</div>
+        <div class="draggable" onclick="select(this, 'l2')">Right Atrium</div>
+        <div class="draggable" onclick="select(this, 'l3')">Left Atrium</div>
+        <div class="draggable" onclick="select(this, 'l4')">Pulmonary Truck</div>
+        <div class="draggable" onclick="select(this, 'l5')">Left Atrium</div>
+        <div class="draggable" onclick="select(this, 'l6')">Left Ventricle</div>
+        <div class="draggable" onclick="select(this, 'l7')">Top of the Heart</div>
     </div>
 
-    <div id="viewport">
-        <!-- These patches will cover the existing labels on image_a0b1bf.png -->
-        <div class="patch p1" data-id="l1">CLICK / DROP</div>
-        <div class="patch p2" data-id="l2">CLICK / DROP</div>
-        <div class="patch p3" data-id="l3">CLICK / DROP</div>
-        <div class="patch p4" data-id="l4">CLICK / DROP</div>
-        <div class="patch p5" data-id="l5">CLICK / DROP</div>
-        <div class="patch p6" data-id="l6">CLICK / DROP</div>
-        <div class="patch p7" data-id="l7">CLICK / DROP</div>
+    <div id="game-container">
+        <!-- Direct reference to your image name -->
+        <img id="heart-image" src="image_a0b1bf.png" alt="Heart Diagram">
+        
+        <!-- Interactive Patches -->
+        <div class="patch p1" onclick="drop('l1', this)">DROP HERE</div>
+        <div class="patch p2" onclick="drop('l2', this)">DROP HERE</div>
+        <div class="patch p3" onclick="drop('l3', this)">DROP HERE</div>
+        <div class="patch p4" onclick="drop('l4', this)">DROP HERE</div>
+        <div class="patch p5" onclick="drop('l5', this)">DROP HERE</div>
+        <div class="patch p6" onclick="drop('l6', this)">DROP HERE</div>
+        <div class="patch p7" onclick="drop('l7', this)">DROP HERE</div>
     </div>
 
     <div id="msg"></div>
 
 <script>
-    const draggables = document.querySelectorAll('.draggable');
-    const patches = document.querySelectorAll('.patch');
-    let draggedItem = null;
+    let selectedLabelId = null;
+    let selectedElement = null;
 
-    // Drag Logic
-    draggables.forEach(item => {
-        item.addEventListener('dragstart', () => {
-            draggedItem = item;
-            item.style.opacity = '0.5';
-        });
-        item.addEventListener('dragend', () => {
-            item.style.opacity = '1';
-        });
-    });
+    function select(el, id) {
+        // Reset previous selections
+        document.querySelectorAll('.draggable').forEach(d => d.classList.remove('selected'));
+        // Set new selection
+        selectedLabelId = id;
+        selectedElement = el;
+        el.classList.add('selected');
+        document.getElementById('msg').innerText = "Ab diagram ke sahi box par click karein";
+        document.getElementById('msg').style.color = "orange";
+    }
 
-    // Drop Logic
-    patches.forEach(patch => {
-        patch.addEventListener('dragover', e => e.preventDefault());
-        patch.addEventListener('drop', e => {
-            e.preventDefault();
-            handleMatch(patch);
-        });
-        // Mobile tap support
-        patch.addEventListener('click', () => {
-            if(draggedItem) handleMatch(patch);
-        });
-    });
+    function drop(targetId, patchElement) {
+        if (!selectedLabelId) {
+            document.getElementById('msg').innerText = "Pehle ek naam chunein!";
+            document.getElementById('msg').style.color = "red";
+            return;
+        }
 
-    // Click selection for easier mobile use
-    draggables.forEach(item => {
-        item.addEventListener('click', () => {
-            draggables.forEach(d => d.style.background = 'white');
-            item.style.background = '#ffeaa7';
-            draggedItem = item;
-        });
-    });
-
-    function handleMatch(targetPatch) {
-        if (!draggedItem) return;
-        
-        const matchId = targetPatch.getAttribute('data-id');
-        if (draggedItem.id === matchId) {
-            targetPatch.classList.add('correct');
-            targetPatch.innerText = draggedItem.innerText;
-            targetPatch.style.borderStyle = "solid";
-            draggedItem.style.visibility = 'hidden';
-            draggedItem = null;
-            document.getElementById('msg').innerText = "Sahi Jawab! ✨";
+        if (selectedLabelId === targetId) {
+            patchElement.classList.add('correct');
+            patchElement.innerText = selectedElement.innerText;
+            patchElement.onclick = null; // Disable after correct match
+            selectedElement.style.visibility = "hidden";
+            selectedLabelId = null;
+            document.getElementById('msg').innerText = "Bilkul Sahi! 🎉";
             document.getElementById('msg').style.color = "#27ae60";
         } else {
             document.getElementById('msg').innerText = "Galat! Ye wo jagah nahi hai. ❌";
-            document.getElementById('msg').style.color = "#d63031";
+            document.getElementById('msg').style.color = "#e74c3c";
         }
     }
 </script>
